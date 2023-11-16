@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Population</title>
+    <style>
+        #uploadForm{
+            max-width: 250px ;
+            display: flex;
+            justify-content: left;
+            flex-direction: column;
+            gap: .25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Upload Files and Generate Document</h2>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="docFile">Upload Doc File:</label>
+        <input type="file" name="docFile" id="docFile" accept=".docx"><br>
+
+        <label for="csvFile">Upload CSV File:</label>
+        <input type="file" name="csvFile" id="csvFile" accept=".csv"><br>
+
+        <button type="button" onclick="populate()">Upload Documents</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        function populate() {
+            var formData = new FormData();
+            formData.append('file', document.getElementById('docFile').files[0]);
+            formData.append('file', document.getElementById('csvFile').files[0]);
+
+            fetch('http://127.0.0.1:5000/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('result').innerHTML = '<p>Files uploaded successfully. <a href="#" onclick="generateDocument(\'' + data.path[0] + '\', \'' + data.path[1] + '\')">Generate Document</a></p>';
+                } else {
+                    document.getElementById('result').innerHTML = '<p>Error uploading files: ' + data.error + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        let newDocslink = []
+        function generateDocument(docPath, csvPath) {
+            var formData = {
+                "docxpath": docPath,
+                "csvpath": csvPath,
+                "newdocname": "new_document"
+            };
+
+            fetch('http://127.0.0.1:5000/generate-document', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    newDocslink = data.newdocpath;
+                    document.getElementById('result').innerHTML += '<p>Document generated successfully. <a href="#" onclick="downloadNewDocs()">Download Documents</a></p>';
+                } else {
+                    document.getElementById('result').innerHTML += '<p>Error generating document: ' + data.error + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function downloadNewDocs(){
+            newDocslink.forEach( doclink =>{
+                const link = document.createElement('a');
+                link.href =  doclink; 
+                link.download = "new_document.docx";
+                link.click();
+            })
+        }
+    </script>
+
+</body>
+</html>
