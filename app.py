@@ -1,35 +1,35 @@
-
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
-from utils.generatefile import *
-from utils.readfiles import allowed_file
+import csv
+from utils.generateFile import generate_file
+from utils.readFile import allowed_file
 
 app = Flask(__name__)
 CORS(app)
 
+HOST_NAME = 'http://127.0.0.1:5000/'
 UPLOAD_FOLDER = 'static/uploads'
-
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
-
     """
     Here we upload the .csv and .docx file to get the path
     """
     
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
+    
     files = request.files.getlist('file')
-
     paths = []
+    column_values = {}
+
     for file in files:
         if file.filename == '':
-            return jsonify({'error': 'No selected file'},400)
+            return jsonify({'error': 'No selected file'}, 400)
 
         if file and allowed_file(file.filename):
             file_extension = file.filename.rsplit('.', 1)[1].lower()
@@ -40,31 +40,38 @@ def upload_file():
 
             file.save(os.path.join(save_path, file.filename))
             paths.append(os.path.join(save_path, file.filename))
-    return jsonify({'success': True, 'path': paths})
 
-    return jsonify({'error': 'File extension not allowed'},400)
+            if file_extension == 'csv':
+                with open(os.path.join(save_path, file.filename), 'r') as csvfile:
+                    csvreader = csv.reader(csvfile)
+                    key_row = next(csvreader)
+                    value_row = next(csvreader)
+                    column_values.update(dict(zip(key_row, value_row)))
+
+        else: 
+            return jsonify({'error': 'File extension not allowed'},400)
+
+    return jsonify({'success': True, 'path': paths, 'column_values': column_values})
 
 
 @app.route('/generate-document', methods=['POST'])
-def generatedoc():
+def generate_doc():
     """
     Here we generate the output file in .docx format from .csv and .docx file template
     """
-
-
-
     body = request.get_json()
-    file_path_doc=body['docxpath']
-    file_path_csv=body['csvpath']
 
-    new_docx_file_name=body['newdocname']+'.docx'
-    newdocpaths=genratefile(file_path_doc,file_path_csv,new_docx_file_name)
-    if newdocpaths:
-        newdoc=['http://127.0.0.1:5000/'+newdocpath for newdocpath in newdocpaths]
-        return jsonify({'success': True,'newdocpath':newdoc})
+    doc_path = body['docPath']
+    csv_path = body['csvPath']
+    doc_name = body['docName']
+
+    new_doc_path = generate_file(doc_path, csv_path, doc_name)
+
+    if new_doc_path:
+        file_path = HOST_NAME + new_doc_path
+        return jsonify({'success': True, 'newDocPath': file_path})
     else:
          return jsonify({'error': 'No selected file'},400)
-
 
 
 @app.route('/')

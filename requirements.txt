@@ -2,4 +2,3 @@ Flask
 docx2txt
 python-docx
 Flask-Cors
-gunicron
