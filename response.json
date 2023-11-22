@@ -1,0 +1,19 @@
+{
+    "csv": [
+        {
+            "first_csv": {
+                "matched_colums": [],
+                "unmatched_colums": []
+            },
+            "second_csv": {
+                "matched_colums": [],
+                "unmatched_colums": []
+            }
+        }
+    ],
+    "doc": {
+        "matched_placeholders": [],
+        "unmatched_placeholders": []
+    },
+    "id": "{{uuid}}"
+}

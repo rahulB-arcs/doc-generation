@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
-import csv
+import uuid
+from werkzeug.utils import secure_filename
 from utils.generateFile import generate_file
-from utils.readFile import allowed_file
+from utils.readFile import allowed_file, extract_placeholders, extract_columns ,match_columns, match_placeholders
 
 app = Flask(__name__)
 CORS(app)
@@ -13,46 +14,55 @@ UPLOAD_FOLDER = 'static/uploads'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """
-    Here we upload the .csv and .docx file to get the path
-    """
-    
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
-    
+
     files = request.files.getlist('file')
-    paths = []
-    column_values = {}
+    folder_name = str(uuid.uuid4())
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    csv_data = []
+    doc_data = {'matched_placeholders': [], 'unmatched_placeholders': []}
+    all_columns = []
+    placeholders = []
 
     for file in files:
         if file.filename == '':
             return jsonify({'error': 'No selected file'}, 400)
 
         if file and allowed_file(file.filename):
-            file_extension = file.filename.rsplit('.', 1)[1].lower()
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], file_extension)
+            filename = secure_filename(file.filename)
+            file_extension = filename.rsplit('.', 1)[1].lower()
+            file_path = os.path.join(folder_path, filename)
+            file.save(file_path)
 
-            if not os.path.exists(save_path):
-                os.makedirs(save_path)
+            if file_extension == 'docx':
+                placeholders = extract_placeholders(file_path)
+        else:
+            return jsonify({'error': 'File extension not allowed'}, 400)
+    
+    for file in files:
+        filename = secure_filename(file.filename)
+        file_extension = filename.rsplit('.', 1)[1].lower()
+        file_path = os.path.join(folder_path, filename)
+        if file_extension == 'csv':
+            columns = extract_columns(file_path)
+            all_columns += columns
+            data = match_columns(filename, columns, placeholders)
+            csv_data.append(data)
 
-            file.save(os.path.join(save_path, file.filename))
-            paths.append(os.path.join(save_path, file.filename))
+    doc_data = match_placeholders(all_columns, placeholders)
 
-            if file_extension == 'csv':
-                with open(os.path.join(save_path, file.filename), 'r') as csvfile:
-                    csvreader = csv.reader(csvfile)
-                    key_row = next(csvreader)
-                    value_row = next(csvreader)
-                    column_values.update(dict(zip(key_row, value_row)))
+    merge_csv()
 
-        else: 
-            return jsonify({'error': 'File extension not allowed'},400)
-
-    return jsonify({'success': True, 'path': paths, 'column_values': column_values})
-
+    return jsonify({
+        'csv': csv_data,
+        'doc': doc_data,
+        'id': folder_name
+    })
 
 @app.route('/generate-document', methods=['POST'])
 def generate_doc():
@@ -62,17 +72,21 @@ def generate_doc():
     body = request.get_json()
 
     doc_path = body['docPath']
-    csv_path = body['csvPath']
+    csv_paths = body['csvPath']
     doc_name = body['docName']
 
-    new_doc_path = generate_file(doc_path, csv_path, doc_name)
+    new_doc_path = generate_file(doc_path, csv_paths, doc_name)
+
+    print(new_doc_path)
 
     if new_doc_path:
         file_path = HOST_NAME + new_doc_path
         return jsonify({'success': True, 'newDocPath': file_path})
     else:
-         return jsonify({'error': 'No selected file'},400)
+         return jsonify({'error': 'No selected file'}, 400)
 
+def merge_csv():
+    return
 
 @app.route('/')
 def index():
