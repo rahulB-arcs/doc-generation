@@ -2,3 +2,4 @@ Flask
 docx2txt
 python-docx
 Flask-Cors
+pandas

@@ -3,8 +3,9 @@ from flask_cors import CORS
 import os
 import uuid
 from werkzeug.utils import secure_filename
-from utils.generateFile import generate_file
 from utils.readFile import allowed_file, extract_placeholders, extract_columns ,match_columns, match_placeholders
+from utils.mergeFile import merge_csv
+from utils.generateFile import generate_file
 
 app = Flask(__name__)
 CORS(app)
@@ -56,7 +57,7 @@ def upload_file():
 
     doc_data = match_placeholders(all_columns, placeholders)
 
-    merge_csv()
+    merge_csv(folder_name)
 
     return jsonify({
         'csv': csv_data,
@@ -64,29 +65,13 @@ def upload_file():
         'id': folder_name
     })
 
-@app.route('/generate-document', methods=['POST'])
-def generate_doc():
-    """
-    Here we generate the output file in .docx format from .csv and .docx file template
-    """
-    body = request.get_json()
 
-    doc_path = body['docPath']
-    csv_paths = body['csvPath']
-    doc_name = body['docName']
+@app.route('/generate-file/<id>', methods=['GET'])
+def generate_doc(id, **kwargs):
 
-    new_doc_path = generate_file(doc_path, csv_paths, doc_name)
+    download_path = generate_file(id)
 
-    print(new_doc_path)
-
-    if new_doc_path:
-        file_path = HOST_NAME + new_doc_path
-        return jsonify({'success': True, 'newDocPath': file_path})
-    else:
-         return jsonify({'error': 'No selected file'}, 400)
-
-def merge_csv():
-    return
+    return HOST_NAME + download_path
 
 @app.route('/')
 def index():
