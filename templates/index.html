@@ -1,96 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload and Population</title>
-    <style>
-        #uploadForm{
-            max-width: 250px ;
-            display: flex;
-            justify-content: left;
-            flex-direction: column;
-            gap: .25rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
+  <title>File Upload and Population</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <h2>Logo</h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+          aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+            <li class="nav-item">
+              <a class="nav-link" href="#"><i class="fa-solid fa-power-off"></i></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#"><i class="fa-solid fa-user"></i></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
 
-    <h2>Upload Files and Generate Document</h2>
+  <div class="heading text-center mt-4">
+    <h1>Upload Files and Generate Document</h1>
+  </div>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="docFile">Upload Doc File:</label>
-        <input type="file" name="docFile" id="docFile" accept=".docx"><br>
+  <form id="uploadForm" class="mt-4" enctype="multipart/form-data">
+    <div class="doc-csv-sections">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-7">
+            <div class="file-drop-area">
+              <label for="csvFile"><b></b>Upload Doc File:</b></label>
+              <span class="file-btn">Choose File</span>
+              <span class="file-name" id="docFileName"></span>
+              <input class="file-input" type="file" name="docFile" id="docFile" accept=".docx"
+                onchange="PreviewWordDoc()"><br>
+            </div>
+            <div class="preview-container">
+              <div id="docContent" class=""></div>
+            </div>
+          </div>
+          <div class="col-sm-5">
+            <div class="file-drop-area">
+              <label for="csvFile"><b></b>Upload CSV File(s):</b></label>
+              <span class="file-btn">Choose files</span>
+              <span class="file-name" id="csvFileName"></span>
+              <input class="file-input" type="file" multiple name="csvFile" id="csvFile" accept=".csv"
+                onchange="updateFileName('csvFile', 'csvFileName')"><br>
+            </div>
+            <div class="preview-container">
+              <div id="csvContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <label for="csvFile">Upload CSV File:</label>
-        <input type="file" name="csvFile" id="csvFile" accept=".csv"><br>
+    <button class="btn btn-success upload-btn" type="button" onclick="uploadDocuments()" data-bs-toggle="modal"
+      data-bs-target="#exampleModal">Upload Documents</button>
+    <button class="btn btn-success upload-btn" id="clearBtn" type="button">Clear</button>
 
-        <button type="button" onclick="populate()">Upload Documents</button>
-    </form>
+  </form>
 
-    <div id="result"></div>
 
-    <script>
-        function populate() {
-            var formData = new FormData();
-            formData.append('file', document.getElementById('docFile').files[0]);
-            formData.append('file', document.getElementById('csvFile').files[0]);
-
-            fetch('http://127.0.0.1:5000/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('result').innerHTML = '<p>Files uploaded successfully. <a href="#" onclick="generateDocument(\'' + data.path[0] + '\', \'' + data.path[1] + '\')">Generate Document</a></p>';
-                } else {
-                    document.getElementById('result').innerHTML = '<p>Error uploading files: ' + data.error + '</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-        let newDocslink = []
-        function generateDocument(docPath, csvPath) {
-            var formData = {
-                "docxpath": docPath,
-                "csvpath": csvPath,
-                "newdocname": "new_document"
-            };
-
-            fetch('http://127.0.0.1:5000/generate-document', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    newDocslink = data.newdocpath;
-                    document.getElementById('result').innerHTML += '<p>Document generated successfully. <a href="#" onclick="downloadNewDocs()">Download Documents</a></p>';
-                } else {
-                    document.getElementById('result').innerHTML += '<p>Error generating document: ' + data.error + '</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-
-        function downloadNewDocs(){
-            newDocslink.forEach( doclink =>{
-                const link = document.createElement('a');
-                link.href =  doclink; 
-                link.download = "new_document.docx";
-                link.click();
-            })
-        }
-    </script>
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-center" id="exampleModalLabel">Mapping</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="result"></div>
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="text-center">
+                  <h6>Docx Content</h6>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="text-center">
+                  <h6>Csv Content</h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="generateBtn">Generate Document</button>
+          <button type="button" class="btn btn-primary" id="downloadBtn">Download Document</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+    integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+    integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="{{ url_for('static', filename='js/dependencies/docx-preview.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
+
 </html>
