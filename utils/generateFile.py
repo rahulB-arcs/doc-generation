@@ -26,9 +26,9 @@ def generate_file(folder_name):
     csv_data = read_csv(csv_path)
     headers = csv_data[0]
 
-    text = text.replace('{{', '{').replace('}}', '}')
+    text = replace_text(text)
 
-    rows_to_merge = min(5, len(csv_data) - 1)
+    rows_to_merge = min(10, len(csv_data) - 1)
 
     for row in range(1, rows_to_merge + 1):
         values = csv_data[row]
@@ -48,3 +48,8 @@ def generate_file(folder_name):
     download_path = f'static/uploads/generated_docs/{folder_name}.docx'
 
     return download_path
+
+
+def replace_text(text): 
+    text = text.replace('{{', '{').replace('}}', '}')
+    return text

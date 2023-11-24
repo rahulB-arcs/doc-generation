@@ -3,6 +3,7 @@ let id
 let generateBtn = document.querySelector('#generateBtn')
 let downloadBtn = document.querySelector('#downloadBtn')
 let clearBtn = document.querySelector('#clearBtn')
+let cancelBtn = document.querySelector('#cancelBtn')
 
 function PreviewWordDoc() {
     var doc = document.getElementById("docFile").files[0];
@@ -14,22 +15,23 @@ function PreviewWordDoc() {
         var container = document.querySelector("#docContent");
 
         docx.renderAsync(doc, container, null, docxOptions);
-        showUploadButton();
+        showActionsButton();
     }
 }
+
 
 function showCsvPreviews(files) {
     const csvContent = document.getElementById('csvContent');
     // csvContent.innerHTML = '';
 
-    files.forEach(file => {
+    files.forEach((file, index) => {
         const reader = new FileReader();
 
         reader.onload = function (e) {
             const preview = document.createElement('div');
             preview.className = 'file-preview';
             preview.innerHTML = `<p class="mb-0">${file.name}</p> 
-            <i class="fa-solid fa-xmark" onclick="removePreview(this)"></i>`;
+            <i class="fa-solid fa-xmark" onclick="removePreview(this, ${index})"></i>`;
             csvContent.appendChild(preview);
         };
 
@@ -38,7 +40,29 @@ function showCsvPreviews(files) {
 }
 
 
-function removePreview(button) {
+function removePreview(button, index) {
+    var fileInput = document.getElementById('csvFile');
+
+    // Get the files
+    var files = fileInput.files;
+
+    
+    if (index >= 0 && index < files.length) {
+      // Convert the FileList to an array
+      var filesArray = Array.from(files);
+    
+      // Remove the file at the specified index
+      filesArray.splice(index, 1);
+    
+      // Convert the array back to a FileList
+      var newFileList = new DataTransfer();
+
+      filesArray.forEach(function (file) {
+        newFileList.items.add(file);
+      });
+      // Assign the new FileList back to the file input
+      fileInput.files = newFileList.files;
+    }
     const preview = button.parentNode;
     const docContent = document.getElementById('csvContent');
     docContent.removeChild(preview);
@@ -53,13 +77,12 @@ function updateFileName(inputId, spanId) {
 
     if (input.files.length > 0) {
         const fileList = Array.from(input.files);
-        // span.textContent = fileList.map(file => file.name).join(', ');
         showCsvPreviews(fileList);
-        showUploadButton();
+        showActionsButton();
     } else {
         span.textContent = '';
         hideDocPreview();
-        hideUploadButton();
+        hideActionsButton();
     }
 }
 
@@ -74,6 +97,12 @@ clearBtn.addEventListener('click', function () {
     const csvFileInput = document.getElementById('csvFile');
     docFileInput.value = '';
     csvFileInput.value = '';
+
+    var docAccordionItem = document.getElementById('documentAccordionItem');
+    var accordionExample2 = document.getElementById('accordionExample2');
+    docAccordionItem.innerHTML = ''
+    accordionExample2.innerHTML = ''
+
 
     hideUploadButton();
     hideDocPreview();
@@ -91,6 +120,7 @@ function hideDocPreview() {
 
 
 function uploadDocuments() {
+    showLoader()
     isGeneratedDocuments = false;
     var formData = new FormData();
 
@@ -98,6 +128,8 @@ function uploadDocuments() {
     var csvFiles = document.getElementById('csvFile').files;
 
     if (docFiles.length === 1 && csvFiles.length >= 1) {
+        const modal = new bootstrap.Modal(document.getElementById("exampleModal"));
+        modal.show()
         for (var x = 0; x < docFiles.length; x++) {
             formData.append('file', docFiles[x]);
         }
@@ -113,8 +145,10 @@ function uploadDocuments() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    hideLoader()
                     handleUploadResponse(data)
                 } else {
+                    hideLoader()
                     toast(data.error)
                 }
             })
@@ -128,29 +162,12 @@ function uploadDocuments() {
 
 
 function handleUploadResponse(data) {
-    var resultHTML = '<h3>Matched and Unmatched Columns</h3>';
 
-    resultHTML += '<h4>CSV Files</h4>';
-    data.csv.forEach(file => {
-        var fileName = Object.keys(file)[0];
-        var matchedColumns = file[fileName].matched_columns.join(', ');
-        var unmatchedColumns = file[fileName].unmatched_columns.join(', ');
-
-        resultHTML += `<p>File: ${fileName}</p>`;
-        resultHTML += `<p>Matched Columns: ${matchedColumns}</p>`;
-        resultHTML += `<p>Unmatched Columns: ${unmatchedColumns}</p>`;
-    });
-
-    resultHTML += '<h4>Document</h4>';
-    var matchedPlaceholders = data.doc.matched_placeholders.join(', ');
-    var unmatchedPlaceholders = data.doc.unmatched_placeholders.join(', ');
-
-    resultHTML += `<p>Matched Placeholders: ${matchedPlaceholders}</p>`;
-    resultHTML += `<p>Unmatched Placeholders: ${unmatchedPlaceholders}</p>`;
+    generateDocumentContent(data)
+    generateCSVFilesContent(data)
 
     id = data.id
 
-    document.getElementById('result').innerHTML = resultHTML;
 }
 
 
@@ -206,20 +223,41 @@ function downloadDocument(downloadLink) {
 }
 
 
-function showUploadButton() {
-    const uploadBtn = document.querySelectorAll('.upload-btn');
-    for (let btn of uploadBtn) {
-        btn.style.display = 'block';
-    }
+cancelBtn.addEventListener('click', function () {
+
+    var docAccordionItem = document.getElementById('documentAccordionItem');
+    var accordionExample2 = document.getElementById('accordionExample2');
+    docAccordionItem.innerHTML = ''
+    accordionExample2.innerHTML = ''
+
+    id = 0
+
+});
+
+
+function showActionsButton() {
+    const actionsBtn = document.querySelector('.action-buttons');
+    actionsBtn.style.display = 'inline-block';
 }
 
 
-function hideUploadButton() {
-    const uploadBtn = document.querySelectorAll('.upload-btn');
-    for (let btn of uploadBtn) {
-        btn.style.display = 'none';
-    }
+function hideActionsButton() {
+    const actionsBtn = document.querySelector('.action-buttons');
+    actionsBtn.style.display = 'none';
 }
+
+
+function showLoader() {
+    const loader = document.querySelector('#loader');
+    loader.style.display = 'block';
+}
+
+
+function hideLoader() {
+    const loader = document.querySelector('#loader');
+    loader.style.display = 'none';
+}
+
 
 function toast(error) {
     Swal.fire({
@@ -229,4 +267,109 @@ function toast(error) {
         showConfirmButton: false,
         timer: 2000
       });
+}
+
+
+function generateDocumentContent(jsonData) {
+    var docAccordionItem = document.getElementById('documentAccordionItem');
+    var docContent = '';
+
+    jsonData.doc.forEach(function (file) {
+        var fileName = Object.keys(file)[0];
+        var matched_placeholders = file[fileName].matched_placeholders;
+        var unmatched_placeholders = file[fileName].unmatched_placeholders;
+    
+        matched_placeholders.forEach(function (matched) {
+            docContent += `
+                <li class="matched">${matched}</li>
+            `;
+        });
+
+        unmatched_placeholders.forEach(function (unmatched) {
+            docContent += `
+                <li class="unmatched">${unmatched}</li>
+            `;
+        });
+
+        docAccordionItem.innerHTML = `
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    ${fileName}
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <ul class="list-unstyled">
+                        ${docContent}
+                    </ul>
+                </div>
+            </div>
+        `;
+    });
+}
+
+
+function generateCSVFilesContent(jsonData) {
+    var accordionExample2 = document.getElementById('accordionExample2');
+    var csvContent = '';
+    var count = 0;
+    var collapsed = '';
+    var show = ''
+
+
+    jsonData.csv.forEach(function (file) {
+        var fileName = Object.keys(file)[0];
+        var matchedColumns = file[fileName].matched_columns;
+        var unmatchedColumns = file[fileName].unmatched_columns;
+
+        if (count == 0) {
+            index =true
+            collapsed = ''
+            show = 'show'
+        } else {
+            index = false
+            collapsed = 'collapsed'
+            show = ''
+        }
+
+        var fileContent = '';
+        matchedColumns.forEach(function (matched) {
+            fileContent += `
+                <li class="matched">${matched}</li>
+            `;
+        });
+
+        unmatchedColumns.forEach(function (unmatched) {
+            fileContent += `
+                <li class="unmatched">${unmatched}</li>
+            `;
+        });
+
+        csvContent += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading${count}">
+                    <button class="accordion-button ${collapsed}" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse${count}" aria-expanded="${index}" aria-controls="collapse${count}">
+                        File: ${fileName}
+                    </button>
+                </h2>
+                <div id="collapse${count}" class="accordion-collapse collapse ${show}" aria-labelledby="heading${count}"
+                    data-bs-parent="#accordionExample2">
+                    <div class="accordion-body">
+                        <ul class="list-unstyled">
+                            ${fileContent}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        count++
+    });
+
+    console.log(csvContent)
+
+    accordionExample2.innerHTML = csvContent;
 }

@@ -74,16 +74,33 @@ def match_columns(filename, columns, placeholders):
         }
     }
 
-def match_placeholders(columns, placeholders):
-    doc_data = {
-        'matched_placeholders': [], 
-        'unmatched_placeholders': []
-    }
+def match_placeholders(filename, columns, placeholders):
+    matched_placeholders = []
+    unmatched_placeholders = []
+    # doc_data = {
+    #     "matched_placeholders": [], 
+    #     "unmatched_placeholders": []
+    # }
+
+    for placeholder in placeholders:
+        if placeholder in columns:
+            matched_placeholders.append(placeholder)
+        else:
+            unmatched_placeholders.append(placeholder)
     
-    matched_placeholders = [ph for ph in columns if ph in placeholders]
-    unmatched_placeholders = [ph for ph in columns if ph not in placeholders]
+    # matched_placeholders = [ph for ph in placeholders if ph in columns]
+    # unmatched_placeholders = [ph for ph in placeholders if ph not in columns]
 
-    doc_data['matched_placeholders'] = matched_placeholders
-    doc_data['unmatched_placeholders'] = unmatched_placeholders
+    # doc_data["matched_placeholders"] = matched_placeholders
+    # doc_data["unmatched_placeholders"] = unmatched_placeholders
 
-    return doc_data
+    return {
+        filename: {
+            'matched_placeholders': matched_placeholders,
+            'unmatched_placeholders': unmatched_placeholders
+        }
+    }
+
+    # return [
+    #     f'{filename}: [{doc_data}]'
+    # ]

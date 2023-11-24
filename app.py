@@ -27,7 +27,7 @@ def upload_file():
         os.makedirs(folder_path, exist_ok=True)
 
         csv_data = []
-        doc_data = {'matched_placeholders': [], 'unmatched_placeholders': []}
+        doc_data = []
         all_columns = []
         placeholders = []
 
@@ -38,10 +38,12 @@ def upload_file():
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 file_extension = filename.rsplit('.', 1)[1].lower()
-                file_path = os.path.join(folder_path, filename)
-                file.save(file_path)
 
                 if file_extension == 'docx':
+                    doc_filename = filename
+                    file_path = os.path.join(folder_path, doc_filename)
+                    file.save(file_path)
+
                     placeholders = extract_placeholders(file_path)
             else:
                 return jsonify({'success': False, 'error': 'File extension not allowed'}, 400)
@@ -49,14 +51,18 @@ def upload_file():
         for file in files:
             filename = secure_filename(file.filename)
             file_extension = filename.rsplit('.', 1)[1].lower()
-            file_path = os.path.join(folder_path, filename)
+
             if file_extension == 'csv':
+                file_path = os.path.join(folder_path, filename)
+                file.save(file_path)
+
                 columns = extract_columns(file_path)
                 all_columns += columns
                 data = match_columns(filename, columns, placeholders)
                 csv_data.append(data)
 
-        doc_data = match_placeholders(all_columns, placeholders)
+        data = match_placeholders(doc_filename, all_columns, placeholders)
+        doc_data.append(data)
 
         merge_csv(folder_name)
 

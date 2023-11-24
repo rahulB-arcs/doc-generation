@@ -9,7 +9,7 @@
 body {
     background: white;
     margin: 0;
-    font-family: 'Lato', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 header i {
@@ -33,16 +33,18 @@ header i.fa-power-off {
     box-shadow: 0 0 10px #bdbdbd;
     position: relative;
     width: 380px;
-    padding: 25px;
-    border: 1px dashed rgba(100, 100, 100, 0.4);
+    padding: 20px;
+    /* border: 1px dashed rgba(100, 100, 100, 0.4); */
     border-radius: 15px;
     margin: 20px auto 20px;
+    background: #333;
+    color: #fff;
 }
 
 .file-btn {
     flex-shrink: 0;
     background-color: rgba(100, 100, 100, 0.04);
-    border: 1px solid rgba(100, 100, 100, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 3px;
     padding: 8px 15px;
     margin-left: 10px;
@@ -75,7 +77,7 @@ header i.fa-power-off {
     text-overflow: ellipsis;
 }
 
-.upload-btn {
+/* .upload-btn {
     background-color: #198754;
     border-radius: .5rem;
     box-sizing: border-box;
@@ -83,13 +85,31 @@ header i.fa-power-off {
     font-size: 16px;
     padding: 1rem 1.75rem;
     text-decoration: none;
-    width: 100%;
     border: 0;
     cursor: pointer;
     user-select: none;
     display: none;
     margin: 15px auto;
-    width: 200px;
+    width: 230px;
+}
+
+.clear-btn{
+    width: 230px;
+    margin: 0 auto;
+    display: block;
+    color: #FFFFFF;
+    font-size: 16px;
+    padding: 15px 10px;
+    margin-bottom: 15px;
+} */
+.action-buttons {
+    display: none;
+    text-align: center;
+    width: 100%;
+}
+
+.action-buttons .btn {
+    padding: 10px 20px;
 }
 
 .upload-btn:hover {
@@ -129,7 +149,13 @@ a {
     height: 600px;
     overflow: scroll;
     overflow-x: hidden;
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.preview-container span.title {
+    padding: 10px 0;
+    display: inline-block;
 }
 
 #docContent {
@@ -170,6 +196,95 @@ a {
     color: #ff0000;
 }
 
+#loader {
+    display: none;
+}
+
 #downloadBtn {
     display: none;
+}
+
+
+.accordion-button {
+    background: #ccc;
+}
+
+.modal-content {
+    border-radius: 1rem;
+}
+
+.accordion-body {
+    padding: 1rem 0;
+}
+
+.accordion-body li {
+    padding: 10px 40px;
+    border-bottom: 1px solid #ddd;
+}
+
+.accordion-body li.unmatched {
+    background: url(../images/remove.png);
+    background-repeat: no-repeat;
+    background-size: 22px;
+    background-position: left center;
+}
+
+.accordion-body li.matched {
+    background: url(../images/check.png);
+    background-repeat: no-repeat;
+    background-size: 22px;
+    background-position: left center;
+}
+
+#loader {
+    position: absolute;
+}
+
+.spinner-border {
+    position: absolute;
+    top: 50%;
+}
+
+.loading-overlay {
+    display: none;
+    background: rgba(255, 255, 255, 0.7);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 9998;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+}
+
+#exampleModal .modal-content{
+    min-height: 600px;
+}
+#exampleModal .btn-close {
+    z-index: 99999;
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background: rgba(255, 255, 255, 0.3);
 }

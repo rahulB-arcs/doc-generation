@@ -9,6 +9,9 @@
     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" />
   <title>File Upload and Population</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
@@ -54,6 +57,7 @@
                 onchange="PreviewWordDoc()"><br>
             </div>
             <div class="preview-container">
+              <span class="title">Document Name</span>
               <div id="docContent" class=""></div>
             </div>
           </div>
@@ -72,41 +76,64 @@
         </div>
       </div>
     </div>
+    <div class="action-buttons mt-2 mb-2">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <button class="btn btn-success upload-btn" type="button" onclick="uploadDocuments()">Upload Documents</button>
+            <button class="btn btn-secondary clear-btn" id="clearBtn" type="button">Clear</button>
+          </div>
+        </div>
 
-    <button class="btn btn-success upload-btn" type="button" onclick="uploadDocuments()" data-bs-toggle="modal"
-      data-bs-target="#exampleModal">Upload Documents</button>
-    <button class="btn btn-success upload-btn" id="clearBtn" type="button">Clear</button>
+      </div>
+
+    </div>
 
   </form>
 
 
   <!-- Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" >
     <div class="modal-dialog modal-dialog-centered modal-xl">
       <div class="modal-content">
+        <div class="loading-overlay" id="loader" style="display: none;">
+          <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
         <div class="modal-header">
-          <h5 class="modal-title text-center" id="exampleModalLabel">Mapping</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <!-- <h5 class="modal-title text-center" id="exampleModalLabel">Mapping</h5> -->
+          <button type="button" class="btn-close" id="cancelBtn" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div id="result"></div>
           <div class="container">
             <div class="row">
               <div class="col-sm-6">
-                <div class="text-center">
-                  <h6>Docx Content</h6>
+                <div class="docx-section">
+                  <h4>Document</h4>
+                  <div class="accordion" id="accordionExample">
+                    <div class="accordion-item" id="documentAccordionItem">
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="col-sm-6">
-                <div class="text-center">
-                  <h6>Csv Content</h6>
+                <div class="csv-section">
+                  <h4>CSV Files</h4>
+                  <div class="files">
+                    <div class="accordion" id="accordionExample2">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" id="cancelBtn" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" id="generateBtn">Generate Document</button>
           <button type="button" class="btn btn-primary" id="downloadBtn">Download Document</button>
         </div>
