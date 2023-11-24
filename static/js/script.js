@@ -138,7 +138,7 @@ function uploadDocuments() {
             formData.append('file', csvFiles[i]);
         }
 
-        fetch('http://127.0.0.1:5000/upload', {
+        fetch('/upload', {
             method: 'POST',
             body: formData
         })
@@ -184,7 +184,7 @@ function generateDocument(id) {
     if (isGeneratedDocuments == true) {
         return
     }
-    fetch('http://127.0.0.1:5000/generate-file/' + id, {
+    fetch('/generate-file/' + id, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'

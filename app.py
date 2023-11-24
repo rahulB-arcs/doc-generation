@@ -10,7 +10,6 @@ from utils.generateFile import generate_file
 app = Flask(__name__)
 CORS(app)
 
-HOST_NAME = 'http://127.0.0.1:5000/'
 UPLOAD_FOLDER = 'static/uploads'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -85,7 +84,7 @@ def generate_doc(id, **kwargs):
 
         return jsonify({
             "success": True,
-            "downloadPath": f'{HOST_NAME}{download_path}'
+            "downloadPath": f'/{download_path}'
         })
     
     except Exception as e:
