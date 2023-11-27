@@ -57,7 +57,7 @@
                 onchange="PreviewWordDoc()"><br>
             </div>
             <div class="preview-container">
-              <span class="title">Document Name</span>
+              <span id="docName" class="title">Document Name</span>
               <div id="docContent" class=""></div>
             </div>
           </div>
@@ -109,7 +109,7 @@
         </div>
         <div class="modal-body">
           <div id="result"></div>
-          <div class="container">
+          <div id="uploadContainer" class="container">
             <div class="row">
               <div class="col-sm-6">
                 <div class="docx-section">
@@ -128,6 +128,13 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div> 
+          <div id="downloadcontainer" class="container">
+            <div class="row">
+              <div class="col-sm-12">
+                <div id="downloadedDoc" class=""></div>
               </div>
             </div>
           </div>

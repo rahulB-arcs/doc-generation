@@ -107,6 +107,10 @@ header i.fa-power-off {
     text-align: center;
     width: 100%;
 }
+.modal-body{
+    height: 700px;
+    overflow: scroll;
+}
 
 .action-buttons .btn {
     padding: 10px 20px;

@@ -2,22 +2,37 @@ let isGeneratedDocuments = false;
 let id
 let generateBtn = document.querySelector('#generateBtn')
 let downloadBtn = document.querySelector('#downloadBtn')
+let uploadContainer = document.querySelector('#uploadContainer')
 let clearBtn = document.querySelector('#clearBtn')
 let cancelBtn = document.querySelector('#cancelBtn')
 
 function PreviewWordDoc() {
     var doc = document.getElementById("docFile").files[0];
-
+    let docName = document.getElementById('docName')
+    
     if (doc != null) {
         var docxOptions = Object.assign(docx.defaultOptions, {
             useMathMLPolyfill: true
         });
         var container = document.querySelector("#docContent");
+        docName.innerHTML = doc.name;  
+        docx.renderAsync(doc, container, null, docxOptions);
+        showActionsButton();
+    }
+}
+
+function PreviewDownloaddDoc(doc) {
+    if (doc != null) {
+        var docxOptions = Object.assign(docx.defaultOptions, {
+            useMathMLPolyfill: true
+        });
+        var container = document.querySelector("#downloadedDoc");
 
         docx.renderAsync(doc, container, null, docxOptions);
         showActionsButton();
     }
 }
+
 
 
 function showCsvPreviews(files) {
@@ -184,6 +199,7 @@ function generateDocument(id) {
     if (isGeneratedDocuments == true) {
         return
     }
+    showLoader();
     fetch('/generate-file/' + id, {
         method: 'GET',
         headers: {
@@ -191,12 +207,20 @@ function generateDocument(id) {
         }
     })
         .then(response => response.json())
-        .then(data => {
+        .then( async (data) => {
             if (data.success) {
                 downloadLink = data.downloadPath;
+                generateBtn.style.display = 'none';
+                uploadContainer.style.display = 'none';
+                
+                const res =  await fetch(data.downloadPath);
+                const doc = res.blob();
+                PreviewDownloaddDoc(doc)
                 downloadBtn.style.display = 'block';
+                hideLoader();
                 isGeneratedDocuments = true;
             } else {
+                hideLoader();
                 toast(data.error)
             }
         })
