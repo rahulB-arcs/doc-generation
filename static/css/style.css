@@ -19,7 +19,9 @@ header i {
     font-size: 20px;
     border-radius: 30px;
 }
-
+.bg-light{
+    background: #ccc !important;
+}
 header i.fa-power-off {
     background: #ff0000;
 }
@@ -189,15 +191,18 @@ a {
     display: flex;
     justify-content: space-between;
     border: 1px solid #ccc;
-    padding: 10px;
     margin-top: 5px;
     align-items: center;
     background: #f5f5f5;
 }
-
+.file-preview p{
+    padding: 10px;
+}
 .file-preview i {
     cursor: pointer;
     color: #ff0000;
+    background: #ccc;
+    padding: 10px;
 }
 
 #loader {
@@ -238,6 +243,14 @@ a {
     background-repeat: no-repeat;
     background-size: 22px;
     background-position: left center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+select {
+    word-wrap: normal;
+    border: 1px solid #ccc;
+    padding: 5px;
 }
 
 #loader {

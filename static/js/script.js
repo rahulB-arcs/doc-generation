@@ -179,7 +179,7 @@ function uploadDocuments() {
 function handleUploadResponse(data) {
 
     generateDocumentContent(data)
-    generateCSVFilesContent(data)
+    // generateCSVFilesContent(data) 
 
     id = data.id
 
@@ -302,16 +302,41 @@ function generateDocumentContent(jsonData) {
         var fileName = Object.keys(file)[0];
         var matched_placeholders = file[fileName].matched_placeholders;
         var unmatched_placeholders = file[fileName].unmatched_placeholders;
-    
+        let optGroups = ""
+        jsonData.csv.forEach( csv => {
+            console.log(csv)
+            var fileName = Object.keys(csv)[0];
+            var fields = csv[fileName];
+            let optionsText = ""
+            for ( const option of fields){
+                optionsText += `<option value="${option}">${option}</option>`
+            }
+            optGroups += `<optgroup label="${fileName}">
+                ${optionsText}
+            </optgroup>`        
+        })
+        
         matched_placeholders.forEach(function (matched) {
-            docContent += `
-                <li class="matched">${matched}</li>
+                docContent += `
+                <li class="matched">
+                    <span>${matched}</span>
+                    <select>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        ${optGroups}
+                    </select>
+                </li>
             `;
         });
 
         unmatched_placeholders.forEach(function (unmatched) {
             docContent += `
-                <li class="unmatched">${unmatched}</li>
+                <li class="unmatched">
+                <span>${unmatched}<span>
+                <select>
+                    <option value="" selected disabled hidden>Choose here</option>
+                    ${optGroups}
+                </select>
+                </li>
             `;
         });
 
@@ -334,7 +359,7 @@ function generateDocumentContent(jsonData) {
     });
 }
 
-
+/* Deprecated Beacuse of Sir Demands  */
 function generateCSVFilesContent(jsonData) {
     var accordionExample2 = document.getElementById('accordionExample2');
     var csvContent = '';

@@ -58,7 +58,7 @@ def upload_file():
                 columns = extract_columns(file_path)
                 all_columns += columns
                 data = match_columns(filename, columns, placeholders)
-                csv_data.append(data)
+                csv_data.append({filename: columns})
 
         data = match_placeholders(doc_filename, all_columns, placeholders)
         doc_data.append(data)
