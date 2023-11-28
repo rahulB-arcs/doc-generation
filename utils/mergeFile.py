@@ -1,9 +1,15 @@
+import os
 import pandas as pd
 import glob
 
 def merge_csv(id):
+
+    merge_path = './static/merged_csv'
+
+    if not os.path.exists(merge_path):
+        os.makedirs(merge_path)
     
-    csv_files = glob.glob(f'./static/uploads/{id}/*.csv')
+    csv_files = glob.glob(f'./static/uploads/{id}/csv/*.csv')
 
     first_file = pd.read_csv(csv_files[0], encoding='latin-1')
     common_headers = set(first_file.columns)
@@ -19,4 +25,4 @@ def merge_csv(id):
             data_to_merge = pd.read_csv(file, encoding='latin-1')
             merged_data = pd.merge(merged_data, data_to_merge, on=common_header, how='outer')
 
-        merged_data.to_csv(f"./static/uploads/{id}/merged_file.csv", index=False)
+        merged_data.to_csv(f"{merge_path}/{id}.csv", index=False)

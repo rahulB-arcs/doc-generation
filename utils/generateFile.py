@@ -1,6 +1,8 @@
 import os
 import glob
 from utils.readFile import read_doc, read_csv
+from utils.mergeFile import merge_csv
+from utils.deleteFile import delete_csv
 from docx import Document
 from docx.enum.text import WD_BREAK
 
@@ -12,13 +14,15 @@ def generate_file(folder_name):
 
     output = []
     doc = Document()
-    save_path = './static/uploads/generated_docs'
+    save_path = './static/generated_docs'
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    csv_path = f'./static/uploads/{folder_name}/merged_file.csv'
-    doc_path_list = glob.glob(f'./static/uploads/{folder_name}/*.docx')
+    merge_csv(folder_name)
+
+    csv_path = f'./static/merged_csv/{folder_name}.csv'
+    doc_path_list = glob.glob(f'./static/uploads/{folder_name}/docs/*.docx')
 
     doc_path = doc_path_list[0] if doc_path_list else ''
 
@@ -45,7 +49,10 @@ def generate_file(folder_name):
 
     file_path = os.path.join(save_path, f'{folder_name}.docx')
     doc.save(file_path)
-    download_path = f'static/uploads/generated_docs/{folder_name}.docx'
+
+    delete_csv(folder_name)
+
+    download_path = f'static/generated_docs/{folder_name}.docx'
 
     return download_path
 

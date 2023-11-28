@@ -9,13 +9,13 @@ let cancelBtn = document.querySelector('#cancelBtn')
 function PreviewWordDoc() {
     var doc = document.getElementById("docFile").files[0];
     let docName = document.getElementById('docName')
-    
+
     if (doc != null) {
         var docxOptions = Object.assign(docx.defaultOptions, {
             useMathMLPolyfill: true
         });
         var container = document.querySelector("#docContent");
-        docName.innerHTML = doc.name;  
+        docName.innerHTML = doc.name;
         docx.renderAsync(doc, container, null, docxOptions);
         showActionsButton();
     }
@@ -61,22 +61,22 @@ function removePreview(button, index) {
     // Get the files
     var files = fileInput.files;
 
-    
-    if (index >= 0 && index < files.length) {
-      // Convert the FileList to an array
-      var filesArray = Array.from(files);
-    
-      // Remove the file at the specified index
-      filesArray.splice(index, 1);
-    
-      // Convert the array back to a FileList
-      var newFileList = new DataTransfer();
 
-      filesArray.forEach(function (file) {
-        newFileList.items.add(file);
-      });
-      // Assign the new FileList back to the file input
-      fileInput.files = newFileList.files;
+    if (index >= 0 && index < files.length) {
+        // Convert the FileList to an array
+        var filesArray = Array.from(files);
+
+        // Remove the file at the specified index
+        filesArray.splice(index, 1);
+
+        // Convert the array back to a FileList
+        var newFileList = new DataTransfer();
+
+        filesArray.forEach(function (file) {
+            newFileList.items.add(file);
+        });
+        // Assign the new FileList back to the file input
+        fileInput.files = newFileList.files;
     }
     const preview = button.parentNode;
     const docContent = document.getElementById('csvContent');
@@ -200,20 +200,50 @@ function generateDocument(id) {
         return
     }
     showLoader();
+
+    const selectedColumns = {};
+
+    const placeholderList = document.getElementById('placeholderList');
+    const optgroups = placeholderList.querySelectorAll('optgroup');
+
+    optgroups.forEach((optgroup) => {
+        const fileName = optgroup.getAttribute('label');
+        const selectedOptions = optgroup.querySelectorAll('option:checked');
+
+        // const selectedOptions = Array.from(options).filter((option) => option.selected);
+
+        if(selectedColumns.fileName === undefined) {
+            selectedColumns[fileName.toString()] = []
+        }
+
+        const obj = {}
+
+        if (fileName && (selectedOptions.length > 0)) {
+            selectedOptions.forEach((option) => {
+                const placeholder = option.textContent.trim();
+                const selectedValue = option.value;
+                obj[placeholder] = selectedValue
+                selectedColumns[fileName.toString()].push(obj)
+            });
+        }
+    });
+
+    console.log(selectedColumns)
     fetch('/generate-file/' + id, {
-        method: 'GET',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(selectedColumns)
     })
         .then(response => response.json())
-        .then( async (data) => {
+        .then(async (data) => {
             if (data.success) {
                 downloadLink = data.downloadPath;
                 generateBtn.style.display = 'none';
                 uploadContainer.style.display = 'none';
-                
-                const res =  await fetch(data.downloadPath);
+
+                const res = await fetch(data.downloadPath);
                 const doc = res.blob();
                 PreviewDownloaddDoc(doc)
                 downloadBtn.style.display = 'block';
@@ -290,39 +320,54 @@ function toast(error) {
         title: error,
         showConfirmButton: false,
         timer: 2000
-      });
+    });
 }
 
 
 function generateDocumentContent(jsonData) {
     var docAccordionItem = document.getElementById('documentAccordionItem');
-    var docContent = '';
 
     jsonData.doc.forEach(function (file) {
         var fileName = Object.keys(file)[0];
         var matched_placeholders = file[fileName].matched_placeholders;
         var unmatched_placeholders = file[fileName].unmatched_placeholders;
-        let optGroups = ""
-        jsonData.csv.forEach( csv => {
-            console.log(csv)
-            var fileName = Object.keys(csv)[0];
-            var fields = csv[fileName];
-            let optionsText = ""
-            for ( const option of fields){
-                optionsText += `<option value="${option}">${option}</option>`
-            }
-            optGroups += `<optgroup label="${fileName}">
+        var docContent = '';
+
+        var optGroups = '';
+
+        jsonData.csv.forEach(function (csv) {
+            var csvFileName = Object.keys(csv)[0];
+            var fields = csv[csvFileName];
+            var optionsText = '';
+
+            fields.forEach(function (option) {
+                optionsText += `<option value="${option}">${option}</option>`;
+            });
+
+            optGroups += `<optgroup label="${csvFileName}">
                 ${optionsText}
-            </optgroup>`        
-        })
-        
+            </optgroup>`;
+        });
+
         matched_placeholders.forEach(function (matched) {
-                docContent += `
+            var selectedColumn = findMatchingColumn(matched, jsonData.csv);
+
+            var selectOptions = optGroups.replace(
+                new RegExp(`"${selectedColumn.file}"`, 'g'),
+                `"${selectedColumn.file}" selected`
+            );
+
+            selectOptions = selectOptions.replace(
+                new RegExp(`"${selectedColumn.column}"`, 'g'),
+                `"${selectedColumn.column}" selected`
+            );
+
+            docContent += `
                 <li class="matched">
                     <span>${matched}</span>
                     <select>
                         <option value="" selected disabled hidden>Choose here</option>
-                        ${optGroups}
+                        ${selectOptions}
                     </select>
                 </li>
             `;
@@ -331,13 +376,14 @@ function generateDocumentContent(jsonData) {
         unmatched_placeholders.forEach(function (unmatched) {
             docContent += `
                 <li class="unmatched">
-                <span>${unmatched}<span>
-                <select>
-                    <option value="" selected disabled hidden>Choose here</option>
-                    ${optGroups}
-                </select>
+                    <span>${unmatched}</span>
+                    <select>
+                        <option value="" selected disabled hidden>Choose here</option>
+                        ${optGroups}
+                    </select>
                 </li>
             `;
+
         });
 
         docAccordionItem.innerHTML = `
@@ -350,75 +396,92 @@ function generateDocumentContent(jsonData) {
             <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
                 data-bs-parent="#accordionExample">
                 <div class="accordion-body">
-                    <ul class="list-unstyled">
+                    <ul class="list-unstyled" id="placeholderList">
                         ${docContent}
                     </ul>
                 </div>
             </div>
         `;
+
     });
 }
 
-/* Deprecated Beacuse of Sir Demands  */
-function generateCSVFilesContent(jsonData) {
-    var accordionExample2 = document.getElementById('accordionExample2');
-    var csvContent = '';
-    var count = 0;
-    var collapsed = '';
-    var show = ''
+function findMatchingColumn(placeholder, csvData) {
+    for (const csv of csvData) {
+        const fileName = Object.keys(csv)[0];
+        const fields = csv[fileName];
 
-
-    jsonData.csv.forEach(function (file) {
-        var fileName = Object.keys(file)[0];
-        var matchedColumns = file[fileName].matched_columns;
-        var unmatchedColumns = file[fileName].unmatched_columns;
-
-        if (count == 0) {
-            index =true
-            collapsed = ''
-            show = 'show'
-        } else {
-            index = false
-            collapsed = 'collapsed'
-            show = ''
+        for (const field of fields) {
+            if (field.includes(placeholder)) {
+                return { file: fileName, column: field };
+            }
         }
+    }
 
-        var fileContent = '';
-        matchedColumns.forEach(function (matched) {
-            fileContent += `
-                <li class="matched">${matched}</li>
-            `;
-        });
-
-        unmatchedColumns.forEach(function (unmatched) {
-            fileContent += `
-                <li class="unmatched">${unmatched}</li>
-            `;
-        });
-
-        csvContent += `
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading${count}">
-                    <button class="accordion-button ${collapsed}" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapse${count}" aria-expanded="${index}" aria-controls="collapse${count}">
-                        File: ${fileName}
-                    </button>
-                </h2>
-                <div id="collapse${count}" class="accordion-collapse collapse ${show}" aria-labelledby="heading${count}"
-                    data-bs-parent="#accordionExample2">
-                    <div class="accordion-body">
-                        <ul class="list-unstyled">
-                            ${fileContent}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        count++
-    });
-
-    console.log(csvContent)
-
-    accordionExample2.innerHTML = csvContent;
+    return { file: '', column: '' };
 }
+
+
+// /* Deprecated Beacuse of Sir Demands  */
+// function generateCSVFilesContent(jsonData) {
+//     var accordionExample2 = document.getElementById('accordionExample2');
+//     var csvContent = '';
+//     var count = 0;
+//     var collapsed = '';
+//     var show = ''
+
+
+//     jsonData.csv.forEach(function (file) {
+//         var fileName = Object.keys(file)[0];
+//         var matchedColumns = file[fileName].matched_columns;
+//         var unmatchedColumns = file[fileName].unmatched_columns;
+
+//         if (count == 0) {
+//             index =true
+//             collapsed = ''
+//             show = 'show'
+//         } else {
+//             index = false
+//             collapsed = 'collapsed'
+//             show = ''
+//         }
+
+//         var fileContent = '';
+//         matchedColumns.forEach(function (matched) {
+//             fileContent += `
+//                 <li class="matched">${matched}</li>
+//             `;
+//         });
+
+//         unmatchedColumns.forEach(function (unmatched) {
+//             fileContent += `
+//                 <li class="unmatched">${unmatched}</li>
+//             `;
+//         });
+
+//         csvContent += `
+//             <div class="accordion-item">
+//                 <h2 class="accordion-header" id="heading${count}">
+//                     <button class="accordion-button ${collapsed}" type="button" data-bs-toggle="collapse"
+//                         data-bs-target="#collapse${count}" aria-expanded="${index}" aria-controls="collapse${count}">
+//                         File: ${fileName}
+//                     </button>
+//                 </h2>
+//                 <div id="collapse${count}" class="accordion-collapse collapse ${show}" aria-labelledby="heading${count}"
+//                     data-bs-parent="#accordionExample2">
+//                     <div class="accordion-body">
+//                         <ul class="list-unstyled">
+//                             ${fileContent}
+//                         </ul>
+//                     </div>
+//                 </div>
+//             </div>
+//         `;
+
+//         count++
+//     });
+
+//     console.log(csvContent)
+
+//     accordionExample2.innerHTML = csvContent;
+// }
