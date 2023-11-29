@@ -1,2 +1,4 @@
 __pycache__
 static/uploads
+static/merged_csv
+static/generated_docs

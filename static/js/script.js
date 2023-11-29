@@ -5,11 +5,13 @@ let downloadBtn = document.querySelector('#downloadBtn')
 let uploadContainer = document.querySelector('#uploadContainer')
 let clearBtn = document.querySelector('#clearBtn')
 let cancelBtn = document.querySelector('#cancelBtn')
+let closeBtn = document.querySelector('#closeBtn')
+let docName = document.getElementById('docName')
+
 let generateRequest = [];
 
 function PreviewWordDoc() {
     var doc = document.getElementById("docFile").files[0];
-    let docName = document.getElementById('docName')
 
     if (doc != null) {
         var docxOptions = Object.assign(docx.defaultOptions, {
@@ -108,19 +110,19 @@ clearBtn.addEventListener('click', function () {
     const csvContent = document.getElementById('csvContent');
     docContent.innerHTML = '';
     csvContent.innerHTML = '';
-
+    docName.innerHTML = "Document Name"
     const docFileInput = document.getElementById('docFile');
     const csvFileInput = document.getElementById('csvFile');
     docFileInput.value = '';
     csvFileInput.value = '';
 
     var docAccordionItem = document.getElementById('documentAccordionItem');
-    var accordionExample2 = document.getElementById('accordionExample2');
+    // var accordionExample2 = document.getElementById('accordionExample2');
     docAccordionItem.innerHTML = ''
-    accordionExample2.innerHTML = ''
+    // accordionExample2.innerHTML = ''
 
 
-    hideUploadButton();
+    hideActionsButton();
     hideDocPreview();
 
     isGeneratedDocuments = false;
@@ -179,8 +181,7 @@ function uploadDocuments() {
 
 function handleUploadResponse(data) {
 
-    generateDocumentContent(data)
-    // generateCSVFilesContent(data) 
+    generateMappingContent(data)
 
     id = data.id
 
@@ -200,36 +201,16 @@ function generateDocument(id) {
     if (isGeneratedDocuments == true) {
         return
     }
+
+    const hasNullMapping = checkNullMapping(generateRequest);
+
+    if (hasNullMapping) {
+        toast("Not all parameters are mapped yet");
+        return
+    }
+
     showLoader();
 
-    // const selectedColumns = {};
-
-    // const placeholderList = document.getElementById('placeholderList');
-    // const optgroups = placeholderList.querySelectorAll('optgroup');
-
-    // optgroups.forEach((optgroup) => {
-    //     const fileName = optgroup.getAttribute('label');
-    //     const selectedOptions = optgroup.querySelectorAll('option:checked');
-
-    //     // const selectedOptions = Array.from(options).filter((option) => option.selected);
-
-    //     if(selectedColumns.fileName === undefined) {
-    //         selectedColumns[fileName.toString()] = []
-    //     }
-
-    //     const obj = {}
-
-    //     if (fileName && (selectedOptions.length > 0)) {
-    //         selectedOptions.forEach((option) => {
-    //             const placeholder = option.textContent.trim();
-    //             const selectedValue = option.value;
-    //             obj[placeholder] = selectedValue
-    //             selectedColumns[fileName.toString()].push(obj)
-    //         });
-    //     }
-    // });
-
-    // console.log(selectedColumns)
     fetch('/generate-file/' + id, {
         method: 'POST',
         headers: {
@@ -243,6 +224,7 @@ function generateDocument(id) {
                 downloadLink = data.downloadPath;
                 generateBtn.style.display = 'none';
                 uploadContainer.style.display = 'none';
+                generateRequest = []
 
                 const res = await fetch(data.downloadPath);
                 const doc = res.blob();
@@ -278,17 +260,24 @@ function downloadDocument(downloadLink) {
 }
 
 
-cancelBtn.addEventListener('click', function () {
+cancelBtn.addEventListener('click', cancelModal);
+
+closeBtn.addEventListener('click', cancelModal);
+
+function cancelModal() {
+    const downloadDoc = document.querySelector("#downloadedDoc");
+    downloadDoc.innerHTML = '';
+    downloadBtn.style.display = 'none';
+    generateBtn.style.display = 'block';
+    uploadContainer.style.display = 'block'
 
     var docAccordionItem = document.getElementById('documentAccordionItem');
-    var accordionExample2 = document.getElementById('accordionExample2');
     docAccordionItem.innerHTML = ''
-    accordionExample2.innerHTML = ''
 
+    generateRequest = []
     id = 0
 
-});
-
+}
 
 function showActionsButton() {
     const actionsBtn = document.querySelector('.action-buttons');
@@ -325,7 +314,7 @@ function toast(error) {
 }
 
 
-function generateDocumentContent(jsonData) {
+function generateMappingContent(jsonData) {
     var docAccordionItem = document.getElementById('documentAccordionItem');
 
     jsonData.doc.forEach(function (file) {
@@ -431,70 +420,6 @@ function findMatchingColumn(placeholder, csvData) {
 }
 
 
-// /* Deprecated Beacuse of Sir Demands  */
-// function generateCSVFilesContent(jsonData) {
-//     var accordionExample2 = document.getElementById('accordionExample2');
-//     var csvContent = '';
-//     var count = 0;
-//     var collapsed = '';
-//     var show = ''
-
-
-//     jsonData.csv.forEach(function (file) {
-//         var fileName = Object.keys(file)[0];
-//         var matchedColumns = file[fileName].matched_columns;
-//         var unmatchedColumns = file[fileName].unmatched_columns;
-
-//         if (count == 0) {
-//             index =true
-//             collapsed = ''
-//             show = 'show'
-//         } else {
-//             index = false
-//             collapsed = 'collapsed'
-//             show = ''
-//         }
-
-//         var fileContent = '';
-//         matchedColumns.forEach(function (matched) {
-//             fileContent += `
-//                 <li class="matched">${matched}</li>
-//             `;
-//         });
-
-//         unmatchedColumns.forEach(function (unmatched) {
-//             fileContent += `
-//                 <li class="unmatched">${unmatched}</li>
-//             `;
-//         });
-
-//         csvContent += `
-//             <div class="accordion-item">
-//                 <h2 class="accordion-header" id="heading${count}">
-//                     <button class="accordion-button ${collapsed}" type="button" data-bs-toggle="collapse"
-//                         data-bs-target="#collapse${count}" aria-expanded="${index}" aria-controls="collapse${count}">
-//                         File: ${fileName}
-//                     </button>
-//                 </h2>
-//                 <div id="collapse${count}" class="accordion-collapse collapse ${show}" aria-labelledby="heading${count}"
-//                     data-bs-parent="#accordionExample2">
-//                     <div class="accordion-body">
-//                         <ul class="list-unstyled">
-//                             ${fileContent}
-//                         </ul>
-//                     </div>
-//                 </div>
-//             </div>
-//         `;
-
-//         count++
-//     });
-
-//     console.log(csvContent)
-
-//     accordionExample2.innerHTML = csvContent;
-// }
-
 function onSelectChange (event, placeholder){
     // Take reference of Object.
     const objectToReplace = generateRequest.find(item => item.doc_placeholder == placeholder);
@@ -502,4 +427,14 @@ function onSelectChange (event, placeholder){
     if (objectToReplace) {
         objectToReplace.csv_column = event.value;
     }
+}
+
+function checkNullMapping(data) {
+    console.log(data)
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].csv_column === null || data[i].csv_column === undefined) {
+            return true;
+        }
+    }
+    return false;
 }

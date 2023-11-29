@@ -6,7 +6,7 @@ from utils.deleteFile import delete_csv
 from docx import Document
 from docx.enum.text import WD_BREAK
 
-def generate_file(folder_name):
+def generate_file(folder_name, columns_to_save, renamed_columns):
 
     """
     generate .docx file  with CSV data
@@ -19,7 +19,7 @@ def generate_file(folder_name):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    merge_csv(folder_name)
+    merge_csv(folder_name, columns_to_save, renamed_columns)
 
     csv_path = f'./static/merged_csv/{folder_name}.csv'
     doc_path_list = glob.glob(f'./static/uploads/{folder_name}/docs/*.docx')

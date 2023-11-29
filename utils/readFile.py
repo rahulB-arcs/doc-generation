@@ -35,7 +35,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def extract_placeholders(file_path):
-    placeholders = []
+    placeholders = set()
     doc = Document(file_path)
 
     for paragraph in doc.paragraphs:
@@ -45,8 +45,8 @@ def extract_placeholders(file_path):
                 start = text.find("{")
                 end = text.find("}")
                 placeholder = text[start + 1 : end]
-                placeholders.append(placeholder)
-    return placeholders
+                placeholders.add(placeholder)
+    return list(placeholders)
 
 def extract_columns(file_path):
     columns = []
@@ -77,22 +77,12 @@ def match_columns(filename, columns, placeholders):
 def match_placeholders(filename, columns, placeholders):
     matched_placeholders = []
     unmatched_placeholders = []
-    # doc_data = {
-    #     "matched_placeholders": [], 
-    #     "unmatched_placeholders": []
-    # }
 
     for placeholder in placeholders:
         if placeholder in columns:
             matched_placeholders.append(placeholder)
         else:
             unmatched_placeholders.append(placeholder)
-    
-    # matched_placeholders = [ph for ph in placeholders if ph in columns]
-    # unmatched_placeholders = [ph for ph in placeholders if ph not in columns]
-
-    # doc_data["matched_placeholders"] = matched_placeholders
-    # doc_data["unmatched_placeholders"] = unmatched_placeholders
 
     return {
         filename: {

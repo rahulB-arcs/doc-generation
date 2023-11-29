@@ -82,11 +82,12 @@ def upload_file():
 @app.route('/generate-file/<id>', methods=['POST'])
 def generate_doc(id, **kwargs):
     try:
-        mapping_data = request.get_json()
+        column_mappings = request.get_json()
 
-        print(mapping_data)
+        columns_to_save = [mapping["csv_column"] for mapping in column_mappings]
+        renamed_columns = [mapping["doc_placeholder"] for mapping in column_mappings]
 
-        download_path = generate_file(id)
+        download_path = generate_file(id, columns_to_save, renamed_columns)
 
         return jsonify({
             "success": True,
