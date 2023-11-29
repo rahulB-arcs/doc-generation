@@ -5,6 +5,7 @@ let downloadBtn = document.querySelector('#downloadBtn')
 let uploadContainer = document.querySelector('#uploadContainer')
 let clearBtn = document.querySelector('#clearBtn')
 let cancelBtn = document.querySelector('#cancelBtn')
+let generateRequest = [];
 
 function PreviewWordDoc() {
     var doc = document.getElementById("docFile").files[0];
@@ -201,40 +202,40 @@ function generateDocument(id) {
     }
     showLoader();
 
-    const selectedColumns = {};
+    // const selectedColumns = {};
 
-    const placeholderList = document.getElementById('placeholderList');
-    const optgroups = placeholderList.querySelectorAll('optgroup');
+    // const placeholderList = document.getElementById('placeholderList');
+    // const optgroups = placeholderList.querySelectorAll('optgroup');
 
-    optgroups.forEach((optgroup) => {
-        const fileName = optgroup.getAttribute('label');
-        const selectedOptions = optgroup.querySelectorAll('option:checked');
+    // optgroups.forEach((optgroup) => {
+    //     const fileName = optgroup.getAttribute('label');
+    //     const selectedOptions = optgroup.querySelectorAll('option:checked');
 
-        // const selectedOptions = Array.from(options).filter((option) => option.selected);
+    //     // const selectedOptions = Array.from(options).filter((option) => option.selected);
 
-        if(selectedColumns.fileName === undefined) {
-            selectedColumns[fileName.toString()] = []
-        }
+    //     if(selectedColumns.fileName === undefined) {
+    //         selectedColumns[fileName.toString()] = []
+    //     }
 
-        const obj = {}
+    //     const obj = {}
 
-        if (fileName && (selectedOptions.length > 0)) {
-            selectedOptions.forEach((option) => {
-                const placeholder = option.textContent.trim();
-                const selectedValue = option.value;
-                obj[placeholder] = selectedValue
-                selectedColumns[fileName.toString()].push(obj)
-            });
-        }
-    });
+    //     if (fileName && (selectedOptions.length > 0)) {
+    //         selectedOptions.forEach((option) => {
+    //             const placeholder = option.textContent.trim();
+    //             const selectedValue = option.value;
+    //             obj[placeholder] = selectedValue
+    //             selectedColumns[fileName.toString()].push(obj)
+    //         });
+    //     }
+    // });
 
-    console.log(selectedColumns)
+    // console.log(selectedColumns)
     fetch('/generate-file/' + id, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(selectedColumns)
+        body: JSON.stringify(generateRequest)
     })
         .then(response => response.json())
         .then(async (data) => {
@@ -365,7 +366,7 @@ function generateDocumentContent(jsonData) {
             docContent += `
                 <li class="matched">
                     <span>${matched}</span>
-                    <select>
+                    <select onchange="onSelectChange(this, '${matched}')">
                         <option value="" selected disabled hidden>Choose here</option>
                         ${selectOptions}
                     </select>
@@ -374,10 +375,14 @@ function generateDocumentContent(jsonData) {
         });
 
         unmatched_placeholders.forEach(function (unmatched) {
+            generateRequest.push({
+                doc_placeholder: unmatched, 
+                csv_column: null,
+            })
             docContent += `
                 <li class="unmatched">
                     <span>${unmatched}</span>
-                    <select>
+                    <select onchange="onSelectChange(this, '${unmatched}')">
                         <option value="" selected disabled hidden>Choose here</option>
                         ${optGroups}
                     </select>
@@ -413,7 +418,11 @@ function findMatchingColumn(placeholder, csvData) {
 
         for (const field of fields) {
             if (field.includes(placeholder)) {
-                return { file: fileName, column: field };
+                generateRequest.push({
+                    doc_placeholder: placeholder, 
+                    csv_column: field,
+                })
+                return { file: fileName, column: field };   
             }
         }
     }
@@ -485,3 +494,12 @@ function findMatchingColumn(placeholder, csvData) {
 
 //     accordionExample2.innerHTML = csvContent;
 // }
+
+function onSelectChange (event, placeholder){
+    // Take reference of Object.
+    const objectToReplace = generateRequest.find(item => item.doc_placeholder == placeholder);
+    //Replace the refrence Object.
+    if (objectToReplace) {
+        objectToReplace.csv_column = event.value;
+    }
+}
